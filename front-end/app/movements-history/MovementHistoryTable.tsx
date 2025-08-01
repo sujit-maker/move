@@ -3,8 +3,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { FaEdit } from "react-icons/fa";
-import { Filter, HistoryIcon } from 'lucide-react'; // Add this import if not present
+import { Filter, HistoryIcon } from 'lucide-react';
 import MovementHistoryModal from "./MovementHistoryModal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface MovementRow {
   id: number;
@@ -70,8 +76,8 @@ const MovementHistoryTable = () => {
     ALLOTTED: ["EMPTY PICKED UP"],
     "EMPTY PICKED UP": ["LADEN GATE-IN", "DAMAGED", "CANCELLED"],
     "LADEN GATE-IN": ["SOB"],
-    SOB: ["GATE-OUT"],
-    "GATE-OUT": ["EMPTY RETURNED","DAMAGED"],
+    SOB: ["LADEN GATE-OUT"],
+    "LADEN GATE-OUT": ["EMPTY RETURNED","DAMAGED"],
     "EMPTY RETURNED": ["AVAILABLE", "UNAVAILABLE"],
     AVAILABLE: ["UNAVAILABLE"],
     UNAVAILABLE: ["AVAILABLE"],
@@ -195,7 +201,7 @@ const MovementHistoryTable = () => {
     // Define all possible statuses to ensure they appear even with 0 count
     const allStatuses = [
       'ALLOTTED', 'EMPTY PICKED UP', 'LADEN GATE-IN', 'SOB',
-      'GATE-OUT', 'EMPTY RETURNED', 'AVAILABLE', 'UNAVAILABLE'
+      'LADEN GATE-OUT', 'EMPTY RETURNED', 'AVAILABLE', 'UNAVAILABLE'
     ];
 
     // Initialize all statuses with 0
@@ -334,7 +340,7 @@ const MovementHistoryTable = () => {
           break;
 
 
-        case "GATE-OUT":
+        case "LADEN GATE-OUT":
           portId = source?.podPortId;
           addressBookId = null;
           break;
@@ -461,21 +467,21 @@ case "RETURNED TO DEPOT":
 
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
-        <input
+        <Input
           type="text"
           placeholder="Search Container No."
           value={containerSearch}
           onChange={(e) => setContainerSearch(e.target.value)}
-          className="flex-1 min-w-[220px] bg-white dark:bg-neutral-800 text-gray-900 dark:text-white px-4 py-2 rounded-md border border-gray-300 dark:border-neutral-700 placeholder-gray-400 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="flex-1 min-w-[220px]"
         />
-        <input
+        <Input
           type="text"
           placeholder="Search Shipping Job No."
           value={jobSearch}
           onChange={(e) => setJobSearch(e.target.value)}
-          className="flex-1 min-w-[220px] bg-white dark:bg-neutral-800 text-gray-900 dark:text-white px-4 py-2 rounded-md border border-gray-300 dark:border-neutral-700 placeholder-gray-400 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="flex-1 min-w-[220px]"
         />
-        <button
+        <Button
           onClick={() => {
             setTempFilters({ status: statusFilter, port: portFilter, location: locationFilter });
             if (portFilter) {
@@ -486,326 +492,410 @@ case "RETURNED TO DEPOT":
             }
             setShowFilterModal(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg transition-colors
-            bg-gray-100 dark:bg-neutral-700
-            border border-gray-300 dark:border-neutral-600
-            shadow-sm
-            text-orange-600 dark:text-white
-            font-semibold
-            hover:bg-orange-100 hover:border-orange-400
-            hover:text-orange-700
-            hover:shadow-md"
+          variant="outline"
+          className="flex items-center gap-2 cursor-pointer"
         >
           <Filter className="h-4 w-4" />
           Filter
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleUpdateStatusClick}
           disabled={selectedIds.length === 0}
-          className={`font-semibold px-5 py-2 rounded-md transition-all duration-200 ${selectedIds.length > 0
-            ? 'bg-orange-600 hover:bg-orange-700 text-white cursor-pointer shadow-lg hover:shadow-xl'
+          className={`${selectedIds.length > 0
+            ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-lg hover:shadow-xl cursor-pointer'
             : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-50'
             }`}
         >
           Update Status {selectedIds.length > 0 && `(${selectedIds.length})`}
-        </button>
+        </Button>
       </div>
 
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-700">
-        <table className="w-full text-sm bg-white dark:bg-neutral-900">
-          <thead className="bg-white dark:bg-neutral-900 text-left text-gray-900 dark:text-neutral-300">
-            <tr>
-              <th className="p-3 text-center">
-                {canSelectAll ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="flex gap-1">
-                      <button
-                        onClick={handleSelectAll}
-                        disabled={selectedIds.length === filteredData.length && filteredData.length > 0}
-                        className="px-2 py-1 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors font-medium"
-                        title="Select All"
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-center w-20">
+                    {canSelectAll ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={handleSelectAll}
+                            disabled={selectedIds.length === filteredData.length && filteredData.length > 0}
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-6 px-2 bg-orange-500 hover:bg-orange-600 text-white border-orange-500 hover:border-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Select All"
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            onClick={handleDeselectAll}
+                            disabled={selectedIds.length === 0}
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-6 px-2 bg-gray-500 hover:bg-gray-600 text-white border-gray-500 hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Deselect All"
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {selectedIds.length > 0 ? `${selectedIds.length}/${filteredData.length} selected` : `${filteredData.length} items`}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">Select</span>
+                    )}
+                  </TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Container No</TableHead>
+                  <TableHead>Job No.</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Port</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Remarks</TableHead>
+                  <TableHead className="text-center">History</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredData.map((row) => (
+                  <TableRow 
+                    key={row.id} 
+                    className={`hover:bg-muted/50 transition-colors ${
+                      selectedIds.includes(row.id) ? 'bg-orange-50 dark:bg-orange-900/20' : ''
+                    }`}
+                  >
+                    <TableCell className="text-center">
+                      <Checkbox
+                        checked={selectedIds.includes(row.id)}
+                        onCheckedChange={() => toggleSelectRow(row)}
+                        className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                      />
+                    </TableCell>
+                    <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-medium">{row.inventory?.containerNumber || "-"}</TableCell>
+                    <TableCell>{row.shipment?.jobNumber || row.emptyRepoJob?.jobNumber || row.jobNumber}</TableCell>
+                                         <TableCell>
+                       <span
+                         className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                           row.status === 'ALLOTTED'
+                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                             : row.status === 'AVAILABLE'
+                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                               : row.status === 'EMPTY PICKED UP'
+                                 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                                 : row.status === 'LADEN GATE-IN'
+                                   ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                   : row.status === 'SOB'
+                                     ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
+                                                                         : row.status === 'LADEN GATE-OUT'
+                                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                       : row.status === 'EMPTY RETURNED'
+                                         ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200'
+                                         : row.status === 'UNAVAILABLE'
+                                           ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                           : row.status === 'DAMAGED'
+                                             ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                             : row.status === 'CANCELLED'
+                                               ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                               : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                         }`}
+                       >
+                         {row.status}
+                       </span>
+                     </TableCell>
+                    <TableCell>{row.port?.portName || "-"}</TableCell>
+                    <TableCell>
+                      {row.status?.toUpperCase() === "SOB" ? (
+                        row.addressBook?.companyName && row.vesselName ? (
+                          `${row.addressBook.companyName} - ${row.vesselName}`
+                        ) : row.addressBook?.companyName ? (
+                          row.addressBook.companyName
+                        ) : row.vesselName ? (
+                          row.vesselName
+                        ) : (
+                          "-"
+                        )
+                      ) : row.addressBook?.companyName && row.port?.portName ? (
+                        `${row.addressBook.companyName} - ${row.port.portName}`
+                      ) : row.addressBook?.companyName ? (
+                        row.addressBook.companyName
+                      ) : row.port?.portName ? (
+                        row.port.portName
+                      ) : (
+                        "N/A"
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{row.remarks}</TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        onClick={() => handleViewHistory(row.inventory?.containerNumber || "")}
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
+                        title="View History"
                       >
-                        Select All
-                      </button>
-                      <button
-                        onClick={handleDeselectAll}
-                        disabled={selectedIds.length === 0}
-                        className="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors font-medium"
-                        title="Deselect All"
+                        <HistoryIcon size={16} />
+                      </Button>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        onClick={() => openEditDateModal(row)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 cursor-pointer"
+                        title="Edit Date"
                       >
-                        Clear
-                      </button>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      {selectedIds.length > 0 ? `${selectedIds.length}/${filteredData.length} selected` : `${filteredData.length} items`}
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-gray-400">Select</span>
-                )}
-              </th>
-              <th className="p-3">Date</th>
-              <th className="p-3">Container No</th>
-              <th className="p-3">Job No.</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Port</th>
-              <th className="p-3">Location</th>
-              <th className="p-3">Remarks</th>
-              <th className="p-3">History</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((row) => (
-              <tr key={row.id} className={`border-t border-gray-200 dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-900 dark:text-white transition-colors ${selectedIds.includes(row.id) ? 'bg-orange-50 dark:bg-orange-900/20' : ''
-                }`}>
-                <td className="text-center p-2">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(row.id)}
-                    onChange={() => toggleSelectRow(row)}
-                    className="w-4 h-4 text-orange-500 bg-white dark:bg-neutral-800 border-gray-300 dark:border-neutral-600 rounded focus:ring-orange-500 cursor-pointer transition-colors hover:border-orange-400"
-                  />
-                </td>
-                <td className="p-2">{new Date(row.date).toLocaleDateString()}</td>
-                <td className="p-2">{row.inventory?.containerNumber || "-"}</td>
-                <td className="p-2">{row.shipment?.jobNumber || row.emptyRepoJob?.jobNumber || row.jobNumber}</td>
-                <td className="p-2 font-semibold text-orange-4">{row.status}</td>
-                <td className="p-2">{row.port?.portName || "-"}</td>
-               <td className="p-2">
-  {row.status?.toUpperCase() === "SOB" ? (
-    row.addressBook?.companyName && row.vesselName ? (
-      `${row.addressBook.companyName} - ${row.vesselName}`
-    ) : row.addressBook?.companyName ? (
-      row.addressBook.companyName
-    ) : row.vesselName ? (
-      row.vesselName
-    ) : (
-      "-"
-    )
-  ) : row.addressBook?.companyName && row.port?.portName ? (
-    `${row.addressBook.companyName} - ${row.port.portName}`
-  ) : row.addressBook?.companyName ? (
-    row.addressBook.companyName
-  ) : row.port?.portName ? (
-    row.port.portName
-  ) : (
-    "N/A"
-  )}
-</td>
-
-
-
-
-                <td className="p-2">{row.remarks}</td>
-                <td className="p-2 text-center">
-                  <button
-                    onClick={() => handleViewHistory(row.inventory?.containerNumber || "")}
-                    className="text-blue-400 cursor-pointer hover:text-blue-300"
-                    title="View History"
-                  >
-                    <HistoryIcon size={16} />
-                  </button>
-                </td>
-                <td className="p-2 text-center">
-                  <button
-                    onClick={() => openEditDateModal(row)}
-                    className="text-yellow-400 cursor-pointer hover:text-yellow-500"
-                    title="Edit Date"
-                  >
-                    <FaEdit />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Bulk Status Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-lg">
-          <div className="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-lg w-full max-w-md border border-gray-300 dark:border-neutral-700">
-            <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Bulk Update Container Status</h2>
-
-
-
-            <div className="space-y-4">
-              {/* New Status Dropdown */}
-              {(() => {
-                // Determine the current status for the modal (from selected rows)
-                const selectedRows = data.filter((row) => selectedIds.includes(row.id));
-                const currentStatus =
-                  selectedRows.length > 0
-                    ? selectedRows[0].status
-                    : "";
-
-                return (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium mb-1 text-black dark:text-white">New Status</label>
-                    <select
-                      value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-black dark:text-white border border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    >
-                      <option value="">Select New Status</option>
-                      {availableStatusOptions.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })()}
-
-              {/* Show if DAMAGED or CANCELLED */}
-              {(newStatus === "EMPTY RETURNED" || newStatus === "RETURNED TO DEPOT") && (
-                <>
-                  {/* Port Dropdown */}
-                  <select
-                    value={selectedPortId || ""}
-                    onChange={(e) => {
-                      const portId = parseInt(e.target.value);
-                      setSelectedPortId(portId);
-                      setSelectedDepotId(null); // Reset depot
-                    }}
-                    className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-black dark:text-white border border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="">Select Port</option>
-                    {ports.map((port) => (
-                      <option key={port.id} value={port.id}>
-                        {port.portName}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Depot Dropdown */}
-                  <select
-                    value={selectedDepotId || ""}
-                    onChange={(e) => setSelectedDepotId(parseInt(e.target.value))}
-                    className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-black dark:text-white border border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    disabled={!selectedPortId}
-                  >
-                    <option value="">Select Depot</option>
-                    {depots.map((depot) => (
-                      <option key={depot.id} value={depot.id}>
-                        {depot.companyName}
-                      </option>
-                    ))}
-                  </select>
-
-                </>
-              )}
-            </div>
-
-            {newStatus === "SOB" && (
-              <>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-black dark:text-white">Select Carrier Name</label>
-                <select
-                  value={selectedCarrierId || ""}
-onChange={(e) => {
-  const value = e.target.value;
-  setSelectedCarrierId(value ? parseInt(value) : null);
-}}
-                  className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-black dark:text-white border border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="">Select Carrier</option>
-                  {carriers.map((carrier) => (
-                    <option key={carrier.id} value={carrier.id}>
-                      {carrier.companyName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
- <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-black dark:text-white">Vessel Name</label>
-              <input
-                type="text"
-                value={vesselName}
-                onChange={(e) => setVesselName(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-white"
-              />
-            </div>
-
-              </>
-            )}
-
-           
-
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-black dark:text-white">Date</label>
-              <input
-                type="date"
-                value={movementDate}
-                onChange={(e) => setMovementDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-white"
-              />
-            </div>
-
-            <div>
-  <label className="block text-sm font-medium text-gray-700 dark:text-white">
-    Remarks {["DAMAGED", "CANCELLED"].includes(newStatus) && <span className="text-red-500">*</span>}
-  </label>
-  <textarea
-    value={remarks}
-    onChange={(e) => setRemarks(e.target.value)}
-    className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-black dark:text-white border border-gray-300 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-    rows={3}
-    placeholder="Enter remarks"
-  />
-</div>
-
-
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setModalOpen(false)} className="px-4 py-2 bg-neutral-600 text-white rounded-md cursor-pointer">
-                Cancel
-              </button>
-              <button onClick={handleBulkUpdate} className="px-4 py-2 bg-blue-600 text-white rounded-md cursor-pointer">
-                Confirm
-              </button>
-            </div>
+                        <FaEdit />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
 
-      {/* Edit Date Modal - Moved Outside */}
-      {editModalOpen && editingRow && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-900 p-6 rounded-lg shadow-lg w-full max-w-md border border-neutral-200 dark:border-neutral-700">
-            <h2 className="text-lg font-semibold text-black dark:text-white mb-4">Edit Movement Date</h2>
+                    {/* Bulk Status Modal */}
+       {modalOpen && (
+         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-lg">
+           <Card className="w-full max-w-md mx-4">
+             <CardHeader className="pb-4">
+               <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                 Bulk Update Container Status
+               </CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-4">
+               {/* New Status Dropdown */}
+               {(() => {
+                 // Determine the current status for the modal (from selected rows)
+                 const selectedRows = data.filter((row) => selectedIds.includes(row.id));
+                 const currentStatus =
+                   selectedRows.length > 0
+                     ? selectedRows[0].status
+                     : "";
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">Container Number</label>
-              <div className="text-black dark:text-white mb-2">{editingRow.inventory?.containerNumber || "-"}</div>
+                 return (
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Status</label>
+                     <select
+                       value={newStatus}
+                       onChange={(e) => setNewStatus(e.target.value)}
+                       className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-white border border-gray-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                     >
+                       <option value="">Select New Status</option>
+                       {availableStatusOptions.map((status) => (
+                         <option key={status} value={status}>
+                           {status}
+                         </option>
+                       ))}
+                     </select>
+                   </div>
+                 );
+               })()}
 
-              <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">Status</label>
-              <div className="text-black dark:text-white mb-2">{editingRow.status}</div>
+               {/* Show if EMPTY RETURNED or RETURNED TO DEPOT */}
+               {(newStatus === "EMPTY RETURNED" || newStatus === "RETURNED TO DEPOT") && (
+                 <div className="space-y-4">
+                   {/* Port Dropdown */}
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Port</label>
+                     <select
+                       value={selectedPortId || ""}
+                       onChange={(e) => {
+                         const portId = parseInt(e.target.value);
+                         setSelectedPortId(portId);
+                         setSelectedDepotId(null); // Reset depot
+                       }}
+                       className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-white border border-gray-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                     >
+                       <option value="">Select Port</option>
+                       {ports.map((port) => (
+                         <option key={port.id} value={port.id}>
+                           {port.portName}
+                         </option>
+                       ))}
+                     </select>
+                   </div>
 
-              <label className="block text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">New Date</label>
-              <input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-black dark:text-white"
-              />
-            </div>
+                   {/* Depot Dropdown */}
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Depot</label>
+                     <select
+                       value={selectedDepotId || ""}
+                       onChange={(e) => setSelectedDepotId(parseInt(e.target.value))}
+                       className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-white border border-gray-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:opacity-50"
+                       disabled={!selectedPortId}
+                     >
+                       <option value="">Select Depot</option>
+                       {depots.map((depot) => (
+                         <option key={depot.id} value={depot.id}>
+                           {depot.companyName}
+                         </option>
+                       ))}
+                     </select>
+                   </div>
+                 </div>
+               )}
 
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setEditModalOpen(false)} className="px-4 py-2 bg-neutral-200 dark:bg-neutral-600 text-black dark:text-white rounded-md">
-                Cancel
-              </button>
-              <button onClick={handleDateUpdate} className="px-4 py-2 bg-blue-600 text-white rounded-md">
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+               {newStatus === "SOB" && (
+                 <div className="space-y-4">
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Select Carrier Name</label>
+                     <select
+                       value={selectedCarrierId || ""}
+                       onChange={(e) => {
+                         const value = e.target.value;
+                         setSelectedCarrierId(value ? parseInt(value) : null);
+                       }}
+                       className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-white border border-gray-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                     >
+                       <option value="">Select Carrier</option>
+                       {carriers.map((carrier) => (
+                         <option key={carrier.id} value={carrier.id}>
+                           {carrier.companyName}
+                         </option>
+                       ))}
+                     </select>
+                   </div>
+
+                   <div className="space-y-2">
+                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Vessel Name</label>
+                     <Input
+                       type="text"
+                       value={vesselName}
+                       onChange={(e) => setVesselName(e.target.value)}
+                       placeholder="Enter vessel name"
+                     />
+                   </div>
+                 </div>
+               )}
+
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                 <Input
+                   type="date"
+                   value={movementDate}
+                   onChange={(e) => setMovementDate(e.target.value)}
+                 />
+               </div>
+
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                   Remarks {["DAMAGED", "CANCELLED"].includes(newStatus) && <span className="text-red-500">*</span>}
+                 </label>
+                 <textarea
+                   value={remarks}
+                   onChange={(e) => setRemarks(e.target.value)}
+                   className="w-full px-3 py-2 rounded-md bg-white dark:bg-neutral-800 text-gray-900 dark:text-white border border-gray-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                   rows={3}
+                   placeholder="Enter remarks"
+                 />
+               </div>
+             </CardContent>
+             <div className="px-6 pb-6 flex justify-end gap-3">
+               <Button
+                 onClick={() => setModalOpen(false)}
+                 variant="outline"
+                 className="border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer"
+               >
+                 Cancel
+               </Button>
+               <Button
+                 onClick={handleBulkUpdate}
+                 className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer"
+               >
+                 Confirm
+               </Button>
+             </div>
+           </Card>
+         </div>
+       )}
+
+             {/* Edit Date Modal */}
+       {editModalOpen && editingRow && (
+         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-lg">
+           <Card className="w-full max-w-md mx-4">
+             <CardHeader className="pb-4">
+               <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                 Edit Movement Date
+               </CardTitle>
+             </CardHeader>
+             <CardContent className="space-y-4">
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Container Number</label>
+                 <div className="px-3 py-2 bg-gray-50 dark:bg-neutral-800 text-gray-900 dark:text-white rounded-md border border-gray-200 dark:border-neutral-600 font-medium">
+                   {editingRow.inventory?.containerNumber || "-"}
+                 </div>
+               </div>
+
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                 <div className="px-3 py-2 bg-gray-50 dark:bg-neutral-800 text-gray-900 dark:text-white rounded-md border border-gray-200 dark:border-neutral-600">
+                   <span
+                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                       editingRow.status === 'ALLOTTED'
+                         ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                         : editingRow.status === 'AVAILABLE'
+                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                           : editingRow.status === 'EMPTY PICKED UP'
+                             ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                             : editingRow.status === 'LADEN GATE-IN'
+                               ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                               : editingRow.status === 'SOB'
+                                 ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
+                                                                   : editingRow.status === 'LADEN GATE-OUT'
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                   : editingRow.status === 'EMPTY RETURNED'
+                                     ? 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200'
+                                     : editingRow.status === 'UNAVAILABLE'
+                                       ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                       : editingRow.status === 'DAMAGED'
+                                         ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                         : editingRow.status === 'CANCELLED'
+                                           ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                           : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                     }`}
+                   >
+                     {editingRow.status}
+                   </span>
+                 </div>
+               </div>
+
+               <div className="space-y-2">
+                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">New Date</label>
+                 <Input
+                   type="date"
+                   value={editDate}
+                   onChange={(e) => setEditDate(e.target.value)}
+                 />
+               </div>
+             </CardContent>
+             <div className="px-6 pb-6 flex justify-end gap-3">
+               <Button
+                 onClick={() => setEditModalOpen(false)}
+                 variant="outline"
+                 className="border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 cursor-pointer"
+               >
+                 Cancel
+               </Button>
+               <Button
+                 onClick={handleDateUpdate}
+                 className="bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+               >
+                 Save
+               </Button>
+             </div>
+           </Card>
+         </div>
+       )}
 
       {showFilterModal && (
         <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">

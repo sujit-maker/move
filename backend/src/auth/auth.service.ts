@@ -22,13 +22,19 @@ export class AuthService {
   }
 
   async login(username: string, password: string) {
-    const user = await this.prisma.user.findUnique({ where: { username } });
-    if (!user) throw new Error('User not found');
+    try {
+      const user = await this.prisma.user.findUnique({ where: { username } });
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) throw new Error('Invalid credentials');
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) throw new Error('Invalid credentials');
-
-    const token = this.jwtService.sign({ id: user.id, userType: user.userType });
-    return { token };
+      const token = this.jwtService.sign({ id: user.id, userType: user.userType });
+      return { token };
+    } catch (error) {
+      throw error;
+    }
   }
 }

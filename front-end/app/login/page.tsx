@@ -18,6 +18,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
+    console.log('Attempting login with:', { username, password });
+
     try {
       const res = await fetch('http://localhost:8000/auth/login', {
         method: 'POST',
@@ -25,15 +27,21 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
 
+      console.log('Response status:', res.status);
+      console.log('Response headers:', res.headers);
+
       if (!res.ok) {
         const data = await res.json();
+        console.log('Error response:', data);
         throw new Error(data.message || 'Login failed');
       }
 
       const data = await res.json();
+      console.log('Success response:', data);
       sessionStorage.setItem('token', data.token); // token only lasts while tab is open
       router.push('/dashboard');
     } catch (err: any) {
+      console.log('Login error:', err);
       setError(err.message);
     }
   };
@@ -78,7 +86,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition cursor-pointer"
           >
             Sign In
           </button>

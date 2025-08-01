@@ -12,7 +12,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_SECRET'),
+        secret: config.get('JWT_SECRET') || 'fallback-secret-key-for-development',
         signOptions: { expiresIn: '1d' },
       }),
     }),
