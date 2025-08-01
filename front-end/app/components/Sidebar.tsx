@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
+import { LogOut } from "lucide-react";
 
 
 import {
@@ -197,7 +198,19 @@ export default function SidebarWithHeader({
   children?: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const sectionTitle = getSectionTitle(pathname);
+
+  const handleLogout = () => {
+    // Clear any stored authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    
+    // Redirect to login page
+    router.push('/login');
+  };
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-neutral-950">
@@ -307,6 +320,18 @@ export default function SidebarWithHeader({
             )}
           </ul>
         </nav>
+        
+        {/* Logout Button */}
+        <div className="p-3 border-t border-gray-200 dark:border-neutral-800">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 text-gray-700 dark:text-gray-300 cursor-pointer transition-colors duration-200 w-full"
+          >
+            <LogOut size={16} className="mr-2" />
+            Logout
+          </button>
+        </div>
+        
         <div className="p-3 text-xs text-gray-500 text-center border-t border-gray-200 dark:border-neutral-800">
           &copy; {new Date().getFullYear()} Ristar Logistics.
         </div>
@@ -326,7 +351,7 @@ export default function SidebarWithHeader({
             </span>
           )}
         </header>
-        <section className="flex-1 bg-white dark:bg-neutral-950 p-6 overflow-x-auto overflow-y-hidden">
+        <section className="flex-1 bg-white dark:bg-neutral-950 p-6 overflow-x-auto overflow-y-auto custom-scrollbar">
           {children}
         </section>
       </main>
